@@ -248,9 +248,9 @@ def _(go, yearly_modes):
 
     # Define colors for each mode
     mode_colors = {
-        'Assist Control-Volume Control': '#FF9999',
-        'Pressure Support/CPAP': '#99CC99',
-        'Pressure-Regulated Volume Control': '#9999FF'
+        'Assist Control-Volume Control': '#66c266',  # green
+        'Pressure Support/CPAP': '#ffcc00',  # yellow
+        'Pressure-Regulated Volume Control': '#fdc086'  # R color
     }
 
     fig_yearly = go.Figure()
@@ -311,9 +311,9 @@ def _(go, yearly_modes):
     years_list_pct = sorted(yearly_modes['year'].unique())
 
     mode_colors_pct = {
-        'Assist Control-Volume Control': '#EE8888',
-        'Pressure Support/CPAP': '#88CC88', 
-        'Pressure-Regulated Volume Control': '#8888DD'
+        'Assist Control-Volume Control': '#66c266',  # green
+        'Pressure Support/CPAP': '#ffcc00',  # yellow
+        'Pressure-Regulated Volume Control': '#fdc086'  # R color
     }
 
     fig_yearly_pct = go.Figure()
