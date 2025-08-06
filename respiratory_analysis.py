@@ -271,15 +271,18 @@ def _(go, yearly_modes):
                 values.append(0)
                 percentages.append(0)
 
+        # Replace display name for Pressure Support/CPAP
+        display_name = 'Pressure Control' if mode == 'Pressure Support/CPAP' else mode
+        
         fig_yearly.add_trace(go.Bar(
-            name=mode,
+            name=display_name,
             x=years,
             y=values,
             text=[f'{p:.1f}%' if p > 0 else '' for p in percentages],
             textposition='inside',
             textfont=dict(color='white', size=12),
             marker_color=mode_colors[mode],
-            hovertemplate='%{x}<br>' + mode + '<br>Hosp-Days: %{y}<br>Percentage: %{text}<extra></extra>'
+            hovertemplate='%{x}<br>' + display_name + '<br>Hosp-Days: %{y}<br>Percentage: %{text}<extra></extra>'
         ))
 
     fig_yearly.update_layout(
@@ -326,15 +329,18 @@ def _(go, yearly_modes):
             else:
                 percentages_pct.append(0)
 
+        # Replace display name for Pressure Support/CPAP
+        display_name_pct = 'Pressure Control' if mode_name_pct == 'Pressure Support/CPAP' else mode_name_pct
+        
         fig_yearly_pct.add_trace(go.Bar(
-            name=mode_name_pct,
+            name=display_name_pct,
             x=years_list_pct,
             y=percentages_pct,
             text=[f'{p:.1f}%' if p > 0 else '' for p in percentages_pct],
             textposition='inside',
             textfont=dict(color='white', size=14, family='Arial Black'),
             marker_color=mode_colors_pct[mode_name_pct],
-            hovertemplate='%{x}<br>' + mode_name_pct + '<br>Percentage: %{text}<extra></extra>'
+            hovertemplate='%{x}<br>' + display_name_pct + '<br>Percentage: %{text}<extra></extra>'
         ))
 
     fig_yearly_pct.update_layout(
