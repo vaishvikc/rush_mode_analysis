@@ -1,5 +1,5 @@
 {
-    "site": "MIMIC",
-    "clif2_path": "/Users/vaishvik/Downloads/work/clif_mimic",
+    "site": "RUSH",
+    "clif2_path": "C:/Users/vchaudha/Downloads/rush_parquet_3",
     "filetype": "parquet"
 }

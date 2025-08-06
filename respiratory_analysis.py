@@ -156,16 +156,16 @@ def _(hosp_mode_counts, px):
 def _(df_with_dates):
     # Mode usage over time - first find most used mode per hospitalization per day
     mode_time_df = df_with_dates.groupby(['hospitalization_id', 'date', 'mode_category']).size().reset_index(name='count')
-    
+
     # For each hospitalization-date combo, find the dominant mode category
     idx_mode_time = mode_time_df.groupby(['hospitalization_id', 'date'])['count'].idxmax()
     dominant_modes = mode_time_df.loc[idx_mode_time]
-    
+
     # Now count dominant modes by date and category
     daily_dominant_counts = dominant_modes.groupby(['date', 'mode_category']).size().reset_index(name='count')
     pivot_df = daily_dominant_counts.pivot(index='date', columns='mode_category', values='count').fillna(0)
-    
-    return daily_dominant_counts, dominant_modes, mode_time_df, pivot_df
+
+    return (pivot_df,)
 
 
 @app.cell
@@ -196,7 +196,7 @@ def _(pivot_df):
 
 
 @app.cell
-def _(df_with_dates, pd):
+def _(df_with_dates):
     # Filter for the 3 specific modes
     target_modes = [
         'Assist Control-Volume Control',
@@ -204,14 +204,21 @@ def _(df_with_dates, pd):
         'Pressure-Regulated Volume Control'
     ]
 
-    df_three_modes = df_with_dates[df_with_dates['mode_name'].isin(target_modes)].copy()
+    df_three_modes = df_with_dates[df_with_dates['mode_category'].isin(target_modes)].copy()
+
+    return (df_three_modes,)
+
+
+@app.cell
+def _(df_three_modes, pd):
+
 
     # Extract year from recorded_dttm
     df_three_modes['year'] = df_three_modes['recorded_dttm'].dt.year
 
     # For each hospitalization and day, find the most used mode
-    hosp_daily_mode = df_three_modes.groupby(['hospitalization_id', 'date', 'mode_name']).size().reset_index(name='count')
-    
+    hosp_daily_mode = df_three_modes.groupby(['hospitalization_id', 'date', 'mode_category']).size().reset_index(name='count')
+
     # Get the dominant mode for each hospitalization-date combination
     idx_hosp_daily = hosp_daily_mode.groupby(['hospitalization_id', 'date'])['count'].idxmax()
     hosp_daily_dominant = hosp_daily_mode.loc[idx_hosp_daily]
@@ -220,7 +227,7 @@ def _(df_with_dates, pd):
     hosp_daily_dominant['year'] = pd.to_datetime(hosp_daily_dominant['date']).dt.year
 
     # Count unique hospitalization-days per mode per year
-    yearly_modes = hosp_daily_dominant.groupby(['year', 'mode_name']).size().reset_index(name='hosp_days')
+    yearly_modes = hosp_daily_dominant.groupby(['year', 'mode_category']).size().reset_index(name='hosp_days')
 
     # Calculate total hospitalization-days per year for percentage
     yearly_totals = yearly_modes.groupby('year')['hosp_days'].sum()
@@ -231,7 +238,7 @@ def _(df_with_dates, pd):
     print(yearly_modes)
     print(f"\nTotal unique hospitalizations analyzed: {df_three_modes['hospitalization_id'].nunique()}")
 
-    return hosp_daily_dominant, yearly_modes
+    return (yearly_modes,)
 
 
 @app.cell
@@ -250,7 +257,7 @@ def _(go, yearly_modes):
 
     # Add trace for each mode
     for mode in mode_colors.keys():
-        mode_data = yearly_modes[yearly_modes['mode_name'] == mode]
+        mode_data = yearly_modes[yearly_modes['mode_category'] == mode]
 
         # Get values for all years (fill 0 if missing)
         values = []
@@ -309,7 +316,7 @@ def _(go, yearly_modes):
     fig_yearly_pct = go.Figure()
 
     for mode_name_pct in mode_colors_pct.keys():
-        mode_data_pct = yearly_modes[yearly_modes['mode_name'] == mode_name_pct]
+        mode_data_pct = yearly_modes[yearly_modes['mode_category'] == mode_name_pct]
 
         percentages_pct = []
         for yr in years_list_pct:
@@ -349,6 +356,21 @@ def _(go, yearly_modes):
     )
 
     fig_yearly_pct
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
     return
 
 
