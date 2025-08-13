@@ -169,27 +169,6 @@ def _(df_with_dates):
 
 
 @app.cell
-def _(go, pivot_df):
-    fig_stacked_timeline = go.Figure()
-    for column_name in pivot_df.columns:
-        fig_stacked_timeline.add_trace(go.Scatter(
-            x=pivot_df.index,
-            y=pivot_df[column_name],
-            mode='lines',
-            name=column_name,
-            stackgroup='one'
-        ))
-    fig_stacked_timeline.update_layout(
-        title="Mode Category Usage Over Time",
-        xaxis_title="Date",
-        yaxis_title="Number of Records",
-        height=500
-    )
-    fig_stacked_timeline
-    return
-
-
-@app.cell
 def _(pivot_df):
     pivot_df
     return
@@ -273,7 +252,7 @@ def _(go, yearly_modes):
 
         # Replace display name for Pressure Support/CPAP
         display_name = 'Pressure Control' if mode == 'Pressure Support/CPAP' else mode
-        
+
         fig_yearly.add_trace(go.Bar(
             name=display_name,
             x=years,
@@ -331,7 +310,7 @@ def _(go, yearly_modes):
 
         # Replace display name for Pressure Support/CPAP
         display_name_pct = 'Pressure Control' if mode_name_pct == 'Pressure Support/CPAP' else mode_name_pct
-        
+
         fig_yearly_pct.add_trace(go.Bar(
             name=display_name_pct,
             x=years_list_pct,
