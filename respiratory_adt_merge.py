@@ -89,50 +89,39 @@ def _(df_adt, df_respiratory):
 
 @app.cell
 def _(df_adt, df_respiratory, pd):
-    # Perform the merge using merge_asof
-    # First sort both dataframes
-    df_respiratory_sorted = df_respiratory.sort_values(['hospitalization_id', 'recorded_dttm'])
-    df_adt_sorted = df_adt.sort_values(['hospitalization_id', 'in_dttm'])
-
-    # We'll need to do this hospitalization by hospitalization for proper interval matching
-    merged_list = []
-
-    # Get unique hospitalization IDs that exist in both datasets
-    common_ids = set(df_respiratory_sorted['hospitalization_id'].unique()) & set(df_adt_sorted['hospitalization_id'].unique())
-
-    print(f"Processing {len(common_ids)} hospitalizations...")
-
-    # Process in batches for efficiency
-    for hosp_id in list(common_ids)[:1000]:  # Limit to first 1000 for testing
-        resp_subset = df_respiratory_sorted[df_respiratory_sorted['hospitalization_id'] == hosp_id]
-        adt_subset = df_adt_sorted[df_adt_sorted['hospitalization_id'] == hosp_id]
-
-        # For each respiratory record, find the ADT record it falls within
-        for _, resp_row in resp_subset.iterrows():
-            recorded_time = resp_row['recorded_dttm']
-
-            # Find ADT records where recorded_dttm is between in_dttm and out_dttm
-            matching_adt = adt_subset[
-                (adt_subset['in_dttm'] <= recorded_time) & 
-                (adt_subset['out_dttm'] >= recorded_time)
-            ]
-
-            if not matching_adt.empty:
-                # Take the first match if multiple (shouldn't happen often)
-                adt_row = matching_adt.iloc[0]
-                merged_row = {
-                    'hospitalization_id': hosp_id,
-                    'recorded_dttm': recorded_time,
-                    'in_dttm': adt_row['in_dttm'],
-                    'out_dttm': adt_row['out_dttm'],
-                    'mode_category': resp_row['mode_category'],
-                    'location_name': adt_row['location_name']
-                }
-                merged_list.append(merged_row)
-
-    # Create final dataframe
-    df_merged = pd.DataFrame(merged_list)
-    print(f"\nMerged dataset shape: {df_merged.shape}")
+    # Optimized merge using inner join and vectorized filtering
+    print("Starting optimized merge...")
+    
+    # Inner join on hospitalization_id to get all combinations
+    df_merged = pd.merge(
+        df_respiratory,
+        df_adt,
+        on='hospitalization_id',
+        how='inner'
+    )
+    
+    print(f"After inner join: {len(df_merged):,} rows")
+    
+    # Filter to keep only rows where recorded_dttm falls within ADT interval
+    df_merged = df_merged[
+        (df_merged['recorded_dttm'] >= df_merged['in_dttm']) &
+        (df_merged['recorded_dttm'] <= df_merged['out_dttm'])
+    ]
+    
+    print(f"After filtering by time intervals: {len(df_merged):,} rows")
+    
+    # Sort by hospitalization_id and recorded_dttm for consistency
+    df_merged = df_merged.sort_values(['hospitalization_id', 'recorded_dttm'])
+    
+    # If there are duplicates (respiratory record matches multiple ADT intervals), keep first
+    df_merged = df_merged.drop_duplicates(
+        subset=['hospitalization_id', 'recorded_dttm', 'mode_category'],
+        keep='first'
+    )
+    
+    print(f"\nFinal merged dataset shape: {df_merged.shape}")
+    print(f"Unique hospitalizations: {df_merged['hospitalization_id'].nunique():,}")
+    
     return (df_merged,)
 
 
@@ -156,6 +145,16 @@ def _(df_merged):
         if count > 0:
             pct = (count / len(df_merged)) * 100
             print(f"{col}: {count:,} ({pct:.2f}%)")
+    return
+
+
+@app.cell
+def _(df_merged):
+    # Save the merged dataset to parquet
+    output_file = "respiratory_adt_merged.parquet"
+    df_merged.to_parquet(output_file, index=False)
+    print(f"\nMerged data saved to: {output_file}")
+    print(f"File contains {len(df_merged):,} rows")
     return
 
 
